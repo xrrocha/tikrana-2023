@@ -49,7 +49,7 @@ class WebServerIT {
 
     @BeforeEach
     fun startWebServer() {
-        webServer = WebServer(host, port)
+        webServer = WebServer(host, port, SimpleHttpCodec)
         webServer.start()
     }
 

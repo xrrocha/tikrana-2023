@@ -6,6 +6,8 @@ import plenix.tikrana.util.ApplicationFailure
 
 object ContentTypes {
 
+    const val TextPlain = "text/plain"
+
     private val ContentTypeRegex = "[^/]+/[^/]+".toRegex()
 
     fun isValid(contentType: ContentType) = ContentTypeRegex.matches(contentType)

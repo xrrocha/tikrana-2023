@@ -10,7 +10,7 @@ fun main(args: Array<String>) {
     initLogger()
 
 
-    val webServer = WebServer(host, port).also { it.start() }
+    val webServer = WebServer(host, port, SimpleHttpCodec).also { it.start() }
     Runtime.getRuntime().addShutdownHook(Thread { webServer.stop() })
 }
 

@@ -16,6 +16,14 @@ interface Codec {
     fun encode(data: Any?, outputStream: OutputStream): Unit?
 }
 
+object TextPlainCodec : Codec {
+    override fun decode(inputStream: InputStream) =
+        String(inputStream.readAllBytes())
+
+    override fun encode(data: Any?, outputStream: OutputStream) =
+        data?.let { outputStream.write(it.toString().toByteArray()) }
+}
+
 open class JacksonCode(private val objectMapper: ObjectMapper) : Codec {
     override fun decode(inputStream: InputStream): Any? =
         objectMapper.readValue(inputStream, Any::class.java)
@@ -64,6 +72,7 @@ open class HttpCodec(private val codecs: Map<ContentType, Codec>) {
 
 object SimpleHttpCodec : HttpCodec(
     mapOf(
+        ContentTypes.TextPlain to TextPlainCodec,
         "application/json" to JacksonCode(ObjectMapper().registerKotlinModule()),
         "application/yaml" to JacksonCode(YAMLMapper.builder().build().registerKotlinModule()),
     )
