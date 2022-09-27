@@ -75,12 +75,12 @@ class WebServer(host: String, port: Int, private val httpCodec: HttpCodec, backl
                         .tapLeft { exchange.methodNotAllowed() }
                         .flatMap { handler ->
                             val requestObject =
-                                if (MethodsWithBody.contains(exchange.requestMethod)) {
-                                    val contentType = exchange.requestHeaders[ContentTypeHeader] ?: listOf(TextPlain)
-                                    httpCodec.decode(exchange.requestBody, contentType)
+                                if (MethodsWithBody.contains(exchange.requestMethod).not()) {
+                                    null.right()
 
                                 } else {
-                                    null.right()
+                                    val contentType = exchange.requestHeaders[ContentTypeHeader] ?: listOf(TextPlain)
+                                    httpCodec.decode(exchange.requestBody, contentType)
                                 }
                             requestObject
                                 .flatMap { requestPayload ->
