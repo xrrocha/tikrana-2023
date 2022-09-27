@@ -1,8 +1,5 @@
 package plenix.tikrana.memimg
 
-import plenix.tikrana.memimg.Mutation
-import plenix.tikrana.memimg.Query
-import plenix.tikrana.memimg.TxDelegate
 import java.math.BigDecimal
 
 typealias Amount = BigDecimal
