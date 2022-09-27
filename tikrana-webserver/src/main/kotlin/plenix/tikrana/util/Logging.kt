@@ -17,7 +17,3 @@ fun initLogger(resourceName: String) {
         .map(LogManager.getLogManager()::readConfiguration)
         .getOrElse { throw IllegalStateException("Can't find resource $resourceName") }
 }
-
-fun openResource(resourceName: String): Either<FileNotFoundException, InputStream> =
-    Thread.currentThread().contextClassLoader.getResourceAsStream(resourceName)?.right()
-        ?: FileNotFoundException("No such resource: $resourceName").left()
