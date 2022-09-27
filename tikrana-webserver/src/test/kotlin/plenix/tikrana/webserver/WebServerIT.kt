@@ -21,15 +21,13 @@ class WebServerIT {
         val greeting = "WebServer rules!"
 
         webServer.get("/") {
-            ExchangeResult(greeting, "text/plain").right()
+            ExchangeResult(greeting).right()
         }
-        webServer.put("/") { exchange ->
-            val payload = String(exchange.requestBody.readAllBytes())
-            ExchangeResult(payload.reversed(), "text/plain").right()
+        webServer.put("/") { input: String, _ ->
+            ExchangeResult(input.reversed()).right()
         }
-        webServer.post("/") { exchange ->
-            val payload = String(exchange.requestBody.readAllBytes())
-            ExchangeResult(payload.uppercase().uppercase(), "text/plain").right()
+        webServer.post("/") { input: String, _ ->
+            ExchangeResult(input.uppercase()).right()
         }
 
         webServerTester.get("/") { it == greeting }

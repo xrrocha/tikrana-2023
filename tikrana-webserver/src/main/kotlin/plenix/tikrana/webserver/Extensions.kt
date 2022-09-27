@@ -4,15 +4,16 @@ import com.sun.net.httpserver.HttpExchange
 import plenix.tikrana.util.ApplicationFailure
 import plenix.tikrana.util.Failure
 import plenix.tikrana.util.SystemFailure
+import plenix.tikrana.webserver.ContentTypes.ContentTypeHeader
 import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.nio.charset.Charset
 
 fun HttpExchange.requestContentType(): ContentType =
-    requestHeaders["Content-Type"]?.firstOrNull() ?: "text/plain"
+    requestHeaders[ContentTypeHeader]?.firstOrNull() ?: "text/plain"
 
 fun HttpExchange.responseContentType(vararg contentType: ContentType) {
-    requestHeaders["Content-Type"] = contentType.toList()
+    requestHeaders[ContentTypeHeader] = contentType.toList()
 }
 
 fun HttpExchange.requestBodyAsString(charset: Charset = Charsets.UTF_8) =
@@ -85,7 +86,7 @@ fun HttpExchange.respondWith(
 ) {
     responseHeaders.apply {
         putAll(headers)
-        put("Content-Type", listOf(contentType))
+        put(ContentTypeHeader, listOf(contentType))
     }
 
     sendResponseHeaders(statusCode, contentLength)

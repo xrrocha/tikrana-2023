@@ -2,6 +2,7 @@ package plenix.tikrana.webserver
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.left
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -42,7 +43,7 @@ open class HttpCodec(private val codecs: Map<ContentType, Codec>) {
         }
     }
 
-    fun <T> decode(inputStream: InputStream, contentType: ContentType): Either<Failure, T?> =
+    fun decode(inputStream: InputStream, contentType: ContentType): Either<Failure, Any?> =
         ContentTypes.validate(contentType)
             .flatMap { cType ->
                 Either.fromNullable(codecs[cType])
@@ -51,14 +52,6 @@ open class HttpCodec(private val codecs: Map<ContentType, Codec>) {
             .flatMap { codec ->
                 Either.catch { codec.decode(inputStream) }
                     .mapLeft { ApplicationFailure("Error decoding input stream", it) }
-                    .flatMap { decodedValue ->
-                        @Suppress("UNCHECKED_CAST")
-                        Either.catch { decodedValue as T }
-                            .mapLeft {
-                                val fromClass = decodedValue?.let { decodedValue::class.qualifiedName }
-                                ApplicationFailure("Error converting from $fromClass}", it)
-                            }
-                    }
             }
 
     fun encode(data: Any?, outputStream: OutputStream, contentType: String): Either<Failure, Unit?> =
@@ -68,6 +61,14 @@ open class HttpCodec(private val codecs: Map<ContentType, Codec>) {
                 Either.catch { codec.encode(data, outputStream) }
                     .mapLeft { ApplicationFailure("Error encoding to output stream", it) }
             }
+
+    fun decode(inputStream: InputStream, contentTypes: List<String>): Either<Failure, Any?> =
+        contentTypes.find(codecs::containsKey)?.let { decode(inputStream, it) }
+            ?: ApplicationFailure("No applicable content types").left()
+
+    fun encode(data: Any?, outputStream: OutputStream, contentTypes: List<String>): Either<Failure, Unit?> =
+        contentTypes.find(codecs::containsKey)?.let { encode(data, outputStream, it) }
+            ?: ApplicationFailure("No applicable content types").left()
 }
 
 object SimpleHttpCodec : HttpCodec(
