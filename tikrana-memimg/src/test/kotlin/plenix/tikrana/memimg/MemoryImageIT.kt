@@ -2,7 +2,6 @@ package plenix.tikrana.memimg
 
 import arrow.core.getOrElse
 import org.junit.jupiter.api.Test
-import plenix.tikrana.util.Failure
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -16,7 +15,7 @@ class MemoryImageIT {
     fun `Memory Image works`() {
 
         val bank = Bank()
-        val eventStorage = MemoryEventStorage()
+        val eventStorage = InMemoryEventStorage()
         val memoryImage = MemoryImage(bank, eventStorage)
 
         fun balanceFor(id: String) = bank.accounts[id]!!.balance.toInt()
@@ -63,20 +62,5 @@ class MemoryImageIT {
                     queryValue.id == "janet" &&
                     queryValue.balance == Amount(70)
         )
-    }
-
-    class Tester<S>(private val memoryImage: MemoryImage) {
-        fun <R> verifyAfter(mutation: Mutation<S, R>, assertion: (R?) -> Boolean) =
-            memoryImage.executeMutation(mutation)
-                .tapLeft(Failure::doThrow)
-                .tap { result ->
-                    if (assertion(result).not())
-                        throw IllegalArgumentException("Assertion failed for $mutation")
-                }
-
-        fun <R> assertAfter(mutation: Mutation<S, R>, assertion: (R?) -> Unit) =
-            memoryImage.executeMutation(mutation)
-                .tapLeft(Failure::doThrow)
-                .tap(assertion)
     }
 }
