@@ -7,4 +7,9 @@ pluginManagement {
 
 rootProject.name = "tikrana"
 
-include("tikrana-webserver")
+include(
+    "tikrana-commons",
+    "tikrana-webserver", // TODO Rename tikrana-webserver to tikrana-http-server
+    "tikrana-memimg"
+)
+
