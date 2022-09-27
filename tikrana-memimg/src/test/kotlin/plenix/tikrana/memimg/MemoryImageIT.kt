@@ -23,27 +23,27 @@ class MemoryImageIT {
 
         with(Tester<Bank>(memoryImage)) {
 
-            assert(CreateAccount("janet", "Janet Doe")) {
+            verifyAfter(CreateAccount("janet", "Janet Doe")) {
                 balanceFor("janet") == 0
             }
 
-            assert(Deposit("janet", Amount(100))) {
+            verifyAfter(Deposit("janet", Amount(100))) {
                 balanceFor("janet") == 100
             }
 
-            assert(Withdrawal("janet", Amount(10))) {
+            verifyAfter(Withdrawal("janet", Amount(10))) {
                 balanceFor("janet") == 90
             }
 
-            assert(CreateAccount("john", "John Doe")) {
+            verifyAfter(CreateAccount("john", "John Doe")) {
                 balanceFor("john") == 0
             }
 
-            assert(Deposit("john", Amount(50))) {
+            verifyAfter(Deposit("john", Amount(50))) {
                 balanceFor("john") == 50
             }
 
-            test(Transfer("janet", "john", Amount(20))) {
+            assertAfter(Transfer("janet", "john", Amount(20))) {
                 assertEquals(70, balanceFor("janet"))
                 assertEquals(70, balanceFor("john"))
             }
@@ -66,7 +66,7 @@ class MemoryImageIT {
     }
 
     class Tester<S>(private val memoryImage: MemoryImage) {
-        fun <R> assert(mutation: Mutation<S, R>, assertion: (R?) -> Boolean) =
+        fun <R> verifyAfter(mutation: Mutation<S, R>, assertion: (R?) -> Boolean) =
             memoryImage.executeMutation(mutation)
                 .tapLeft(Failure::doThrow)
                 .tap { result ->
@@ -74,7 +74,7 @@ class MemoryImageIT {
                         throw IllegalArgumentException("Assertion failed for $mutation")
                 }
 
-        fun <R> test(mutation: Mutation<S, R>, assertion: (R?) -> Unit) =
+        fun <R> assertAfter(mutation: Mutation<S, R>, assertion: (R?) -> Unit) =
             memoryImage.executeMutation(mutation)
                 .tapLeft(Failure::doThrow)
                 .tap(assertion)
