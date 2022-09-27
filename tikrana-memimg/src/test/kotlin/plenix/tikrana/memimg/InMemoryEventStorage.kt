@@ -1,8 +1,6 @@
 package plenix.tikrana.memimg
 
-import plenix.tikrana.memimg.EventStorage
-
-class MemoryEventStorage : EventStorage {
+class InMemoryEventStorage : EventStorage {
     internal val buffer = mutableListOf<Any>()
     override fun <E> replay(eventConsumer: (E) -> Unit) {
         @Suppress("UNCHECKED_CAST")
