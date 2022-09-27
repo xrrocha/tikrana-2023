@@ -19,31 +19,33 @@ class MemoryImageIT {
         val eventStorage = MemoryEventStorage()
         val memoryImage = MemoryImage(bank, eventStorage)
 
+        fun balanceFor(id: String) = bank.accounts[id]!!.balance.toInt()
+
         with(Tester<Bank>(memoryImage)) {
 
             assert(CreateAccount("janet", "Janet Doe")) {
-                bank.accounts["janet"]!!.balance == Amount.ZERO
+                balanceFor("janet") == 0
             }
 
             assert(Deposit("janet", Amount(100))) {
-                bank.accounts["janet"]!!.balance == Amount(100)
+                balanceFor("janet") == 100
             }
 
             assert(Withdrawal("janet", Amount(10))) {
-                bank.accounts["janet"]!!.balance == Amount(90)
+                balanceFor("janet") == 90
             }
 
             assert(CreateAccount("john", "John Doe")) {
-                bank.accounts["john"]!!.balance == Amount.ZERO
+                balanceFor("john") == 0
             }
 
             assert(Deposit("john", Amount(50))) {
-                bank.accounts["john"]!!.balance == Amount(50)
+                balanceFor("john") == 50
             }
 
             test(Transfer("janet", "john", Amount(20))) {
-                assertEquals(Amount(70), bank.accounts["janet"]!!.balance)
-                assertEquals(Amount(70), bank.accounts["john"]!!.balance)
+                assertEquals(70, balanceFor("janet"))
+                assertEquals(70, balanceFor("john"))
             }
         }
 
