@@ -1,1 +1,0 @@
-# Tikrana Web Server

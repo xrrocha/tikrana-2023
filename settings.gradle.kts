@@ -9,7 +9,8 @@ rootProject.name = "tikrana"
 
 include(
     "tikrana-commons",
-    "tikrana-webserver", // TODO Rename tikrana-webserver to tikrana-http-server
-    "tikrana-memimg"
+    "tikrana-http-server",
+    "tikrana-memory-image",
+    "tikrana-memory-acme",
 )
 
