@@ -2,6 +2,7 @@ package plenix.tikrana.webserver
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.right
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import plenix.tikrana.util.ApplicationFailure
@@ -34,6 +35,9 @@ typealias ExchangeHandler<I, O> = (I, HttpExchange) -> Either<Failure, ExchangeR
 class WebServer(host: String, port: Int, private val httpCodec: HttpCodec, backlog: Int = 0) {
 
     companion object {
+
+        private val MethodsWithBody = setOf("POST", "PUT")
+
         private val logger = Logger.getLogger(WebServer::class.qualifiedName)
     }
 
@@ -70,9 +74,17 @@ class WebServer(host: String, port: Int, private val httpCodec: HttpCodec, backl
                         .mapLeft { ApplicationFailure("Method not allowed ${exchange.requestMethod}") }
                         .tapLeft { exchange.methodNotAllowed() }
                         .flatMap { handler ->
-                            val contentType = exchange.requestHeaders[ContentTypeHeader] ?: listOf(TextPlain)
-                            httpCodec.decode(exchange.requestBody, contentType)
+                            val requestObject =
+                                if (MethodsWithBody.contains(exchange.requestMethod)) {
+                                    val contentType = exchange.requestHeaders[ContentTypeHeader] ?: listOf(TextPlain)
+                                    httpCodec.decode(exchange.requestBody, contentType)
+
+                                } else {
+                                    null.right()
+                                }
+                            requestObject
                                 .flatMap { requestPayload ->
+                                    // TODO Verify cast exceptions are caught
                                     Either.catch { requestPayload as I }
                                         .mapLeft { ApplicationFailure("Request type mismatch", it) }
                                 }
