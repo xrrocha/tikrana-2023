@@ -3,8 +3,14 @@ package plenix.tikrana.util
 import java.util.logging.Level
 import java.util.logging.Logger
 
-sealed class Failure(level: String, context: String, cause: Throwable? = null) :
-    RuntimeException("$level error: $context${cause?.let { " (${cause.message})" } ?: ""}", cause) {
+sealed class Failure(level: String, context: String, cause: Throwable? = null) {
+
+    val message = "$level error: $context${cause?.let { " (${cause.message ?: cause})" } ?: ""}"
+    private val exception by lazy { RuntimeException(message, cause) }
+
+    fun toException() = exception
+
+    fun doThrow(): Nothing = throw exception
 
     override fun toString(): String = "Failure($message)"
 }
