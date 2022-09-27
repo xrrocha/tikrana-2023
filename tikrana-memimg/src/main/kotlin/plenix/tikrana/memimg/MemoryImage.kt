@@ -20,9 +20,10 @@ class MemoryImage(private val system: Any, private val eventStorage: EventStorag
         synchronized(system) { eventStorage.replay { mutation: Mutation<Any, Any> -> mutation.executeOn(system) } }
     }
 
-    fun executeMutation(mutation: Mutation<Any, Any>): Either<Failure, Any?> =
+    fun <S, R> executeMutation(mutation: Mutation<S, R>): Either<Failure, R?> =
         TxManager.run {
-            Either.catch { mutation.executeOn(system) }
+            @Suppress("UNCHECKED_CAST")
+            Either.catch { mutation.executeOn(system as S) }
                 .mapLeft { ApplicationFailure("Executing mutation ${mutation::class.qualifiedName}", it) }
                 .flatMap { result ->
                     Either.catch { eventStorage.append(mutation) }
@@ -31,7 +32,8 @@ class MemoryImage(private val system: Any, private val eventStorage: EventStorag
                 }
         }
 
-    fun executeQuery(query: Query<Any, Any>): Either<Failure, Any?> =
-        Either.catch { query.queryOn(system) }
+    fun <S, R> executeQuery(query: Query<S, R>): Either<Failure, R?> =
+        @Suppress("UNCHECKED_CAST")
+        Either.catch { query.queryOn(system as S) }
             .mapLeft { ApplicationFailure("Executing query ${query::class.qualifiedName}", it) }
 }
