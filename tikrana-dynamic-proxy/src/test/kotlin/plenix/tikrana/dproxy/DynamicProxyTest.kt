@@ -1,7 +1,7 @@
 package plenix.tikrana.dproxy
 
 import org.junit.jupiter.api.Test
-import plenix.tikrana.dproxy.DProxy.new
+import plenix.tikrana.dproxy.DynamicProxy.Companion.new
 import plenix.tikrana.dproxy.Model.Gender.FEMALE
 import plenix.tikrana.dproxy.Model.Person
 import plenix.tikrana.dproxy.Model.PersonName
@@ -56,9 +56,9 @@ object Model {
     operator fun <T : Entity> T.invoke(block: T.() -> Unit) = block(this)
 }
 
-class DProxyTest {
+class DynamicProxyTest {
     @Test
-    fun `DProxy creates interface instance properly`() {
+    fun `DProxy populates interface properties completely and correctly`() {
         val janet = new<Person> {
             gender = FEMALE
             personName = PersonName(firstName = "Janet", paternalSurname = "Doe")

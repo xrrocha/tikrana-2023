@@ -35,30 +35,39 @@ interface ValueProvider<T> {
     fun provideValues(): List<Pair<KProperty1<T, *>, Any?>>
 }
 
-object DProxy {
-    inline fun <reified T : Any> new(block: T.() -> Unit): T =
-        @Suppress("UNCHECKED_CAST")
-        (new(T::class) as T)
-            .also(block)
-            .also { instance ->
-                T::class
-                    .allSuperclasses
-                    .flatMap(KClass<*>::memberProperties)
-                    .filter { (it as KProperty1<T, Any>).get(instance) == null }
-                    .forEach(::println)
-            }
+// TODO Add optional containing parent object in builder
+class DynamicProxy(kClass: KClass<*>) : InvocationHandler {
 
-    fun new(klass: KClass<*>): Any =
-        InvocationHandlerImpl(klass)
-            .let {
-                Proxy.newProxyInstance(klass.java.classLoader, arrayOf(klass.java), it)
-            }
-}
+    companion object {
+        inline fun <reified T : Any> new(block: T.() -> Unit): T =
+            @Suppress("UNCHECKED_CAST")
+            DynamicProxy(T::class)
+                .let { dynamicProxy ->
+                    val instance =
+                        Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java), dynamicProxy) as T
+                    dynamicProxy to instance.also(block)
+                }
+                .also { (dynamicProxy, _) ->
+                    T::class
+                        .allSuperclasses
+                        .flatMap(KClass<*>::memberProperties)
+                        .map(KProperty1<out Any, *>::name)
+                        .filterNot(dynamicProxy.values::containsKey)
+                        .forEach(::println)
+                }
+                .second
 
-// TODO Add top-level parent object in builder
-internal class InvocationHandlerImpl(kClass: KClass<*>) : InvocationHandler {
+        val primitives = setOf(
+            Boolean::class, Char::class, Byte::class,
+            Short::class, Int::class, Long::class, String::class,
+            // TODO Ascertain floating point and unsigned types count as non-cached primitives
+            Double::class, Float::class,
+            UByte::class, UShort::class, UInt::class, ULong::class,
+        )
+            .map { it.javaPrimitiveType }
+    }
 
-    private var values = mutableMapOf<String, Any?>()
+    val values = mutableMapOf<String, Any?>()
 
     init {
         require(kClass.java.isInterface) { "Can't proxy non-interface class ${kClass.qualifiedName}!" }
@@ -132,17 +141,6 @@ internal class InvocationHandlerImpl(kClass: KClass<*>) : InvocationHandler {
         if (!(type.isEnum || primitives.contains(type))) {
             setProperty(prop, value)
         }
-    }
-
-    companion object {
-        val primitives = setOf(
-            Boolean::class, Char::class, Byte::class,
-            Short::class, Int::class, Long::class, String::class,
-            // TODO Ascertain floating point and unsigned types count as non-cached primitives
-            Double::class, Float::class,
-            UByte::class, UShort::class, UInt::class, ULong::class,
-        )
-            .map { it.javaPrimitiveType }
     }
 }
 
