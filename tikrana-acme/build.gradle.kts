@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":tikrana-commons"))
+    implementation(project(":tikrana-dynamic-proxy"))
     implementation("io.arrow-kt:arrow-core:1.1.3-rc.1")
     testImplementation(kotlin("test"))
 }

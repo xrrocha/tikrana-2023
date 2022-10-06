@@ -1,9 +1,9 @@
-package plenix.tikrana.dproxy
+package plenix.tikrana.dynamicproxy
 
 import org.junit.jupiter.api.Test
-import plenix.tikrana.dproxy.Model.Gender.FEMALE
-import plenix.tikrana.dproxy.Model.Person
-import plenix.tikrana.dproxy.Model.PersonName
+import plenix.tikrana.dynamicproxy.Model.Gender.FEMALE
+import plenix.tikrana.dynamicproxy.Model.Person
+import plenix.tikrana.dynamicproxy.Model.PersonName
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit.YEARS
 import java.util.concurrent.atomic.AtomicLong

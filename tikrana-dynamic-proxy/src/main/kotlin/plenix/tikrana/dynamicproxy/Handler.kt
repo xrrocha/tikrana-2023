@@ -1,4 +1,4 @@
-package plenix.tikrana.dproxy
+package plenix.tikrana.dynamicproxy
 
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
@@ -22,8 +22,9 @@ import kotlin.reflect.jvm.javaSetter
 import kotlin.reflect.jvm.kotlinFunction
 
 inline fun <reified T : Any> new(noinline block: T.() -> Unit): T =
-    (Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java), Handler(T::class)) as T)
-        .also(block)
+    (new(T::class) as T).also(block)
+
+fun new(kClass: KClass<*>): Any = Proxy.newProxyInstance(kClass.java.classLoader, arrayOf(kClass.java), Handler(kClass))
 
 interface PropertyValueProvider<T> {
     fun provideValues(): List<Pair<KProperty1<T, *>, Any?>>
