@@ -39,7 +39,7 @@ interface Initializer<T> {
 
 object DProxy {
     inline fun <reified T: Any> create(block: T.() -> Unit): T =
-//        @Suppress("UNCHECKED_CAST")
+        @Suppress("UNCHECKED_CAST")
         (create(T::class) as T)
             .also(block)
             .also { instance ->
@@ -50,13 +50,12 @@ object DProxy {
                     .forEach {
                         (it as Initializer<Any>).initialize(instance) }
             }
-//            .also { instance ->
-//                // TODO Validate all required properties have been populated
-//                T::class
-//                    .allSuperclasses
-//                    .flatMap(KClass<*>::memberProperties)
-//                    .filterNot{ (it as KProperty1<Any>).get(instance) != null}
-//            }
+            .also { instance ->
+                T::class
+                    .allSuperclasses
+                    .flatMap(KClass<*>::memberProperties)
+                    .filterNot{ (it as KProperty1<T, Any>).get(instance) != null}
+            }
 
     fun create(klass: KClass<*>): Any =
         InvocationHandlerImpl(klass)
