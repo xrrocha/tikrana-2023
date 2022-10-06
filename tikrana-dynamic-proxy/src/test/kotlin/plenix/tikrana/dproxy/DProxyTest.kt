@@ -1,6 +1,7 @@
 package plenix.tikrana.dproxy
 
 import org.junit.jupiter.api.Test
+import plenix.tikrana.dproxy.DProxy.new
 import plenix.tikrana.dproxy.Model.Gender.FEMALE
 import plenix.tikrana.dproxy.Model.Person
 import plenix.tikrana.dproxy.Model.PersonName
@@ -15,11 +16,10 @@ object Model {
     interface Entity {
         val id: Long
 
-        companion object: Initializer<Entity> {
-            private val idGenerator = AtomicLong(0L)
+        companion object : ValueProvider<Entity> {
+            private val idGenerator = AtomicLong(41L)
             protected fun nextId() = idGenerator.incrementAndGet()
-            override fun initialize(instance: Entity) {
-            }
+            override fun provideValues() = listOf(Entity::id to nextId())
         }
     }
 
@@ -34,7 +34,7 @@ object Model {
         var paternalSurname: String,
         var maternalSurname: String? = null
     ) {
-        fun show() = "$firstName $paternalSurname"
+        fun show() = "$paternalSurname, $firstName"
     }
 
     interface Person : Entity, Nameable {
@@ -59,13 +59,14 @@ object Model {
 class DProxyTest {
     @Test
     fun `DProxy creates interface instance properly`() {
-        val janet = DProxy.create<Person> {
+        val janet = new<Person> {
             gender = FEMALE
             personName = PersonName(firstName = "Janet", paternalSurname = "Doe")
             birthDate = LocalDate.of(1970, 1, 1)
         }
+        assertEquals(42L, janet.id)
         assertEquals(FEMALE, janet.gender)
-        assertEquals("Janet Doe", janet.name)
+        assertEquals("Doe, Janet", janet.name)
         assertTrue(janet.age() >= 52)
     }
 }

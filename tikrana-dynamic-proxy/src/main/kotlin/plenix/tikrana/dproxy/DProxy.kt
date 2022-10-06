@@ -20,10 +20,8 @@ import java.util.TreeSet
 import java.util.WeakHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
-import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.allSuperclasses
-import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredMemberProperties
@@ -33,43 +31,48 @@ import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaSetter
 import kotlin.reflect.jvm.kotlinFunction
 
-interface Initializer<T> {
-    fun initialize(instance: T)
+interface ValueProvider<T> {
+    fun provideValues(): List<Pair<KProperty1<T, *>, Any?>>
 }
 
 object DProxy {
-    inline fun <reified T: Any> create(block: T.() -> Unit): T =
+    inline fun <reified T : Any> new(block: T.() -> Unit): T =
         @Suppress("UNCHECKED_CAST")
-        (create(T::class) as T)
+        (new(T::class) as T)
             .also(block)
             .also { instance ->
                 T::class
                     .allSuperclasses
-                    .mapNotNull(KClass<*>::companionObjectInstance)
-                    .filterIsInstance(Initializer::class.java)
-                    .forEach {
-                        (it as Initializer<Any>).initialize(instance) }
-            }
-            .also { instance ->
-                T::class
-                    .allSuperclasses
                     .flatMap(KClass<*>::memberProperties)
-                    .filterNot{ (it as KProperty1<T, Any>).get(instance) != null}
+                    .filter { (it as KProperty1<T, Any>).get(instance) == null }
+                    .forEach(::println)
             }
 
-    fun create(klass: KClass<*>): Any =
+    fun new(klass: KClass<*>): Any =
         InvocationHandlerImpl(klass)
             .let {
                 Proxy.newProxyInstance(klass.java.classLoader, arrayOf(klass.java), it)
             }
 }
 
-internal class InvocationHandlerImpl(klass: KClass<*>) : InvocationHandler {
+// TODO Add top-level parent object in builder
+internal class InvocationHandlerImpl(kClass: KClass<*>) : InvocationHandler {
 
     private var values = mutableMapOf<String, Any?>()
 
     init {
-        require(klass.java.isInterface) { "Can't proxy non-interface class ${klass.qualifiedName}!" }
+        require(kClass.java.isInterface) { "Can't proxy non-interface class ${kClass.qualifiedName}!" }
+
+        kClass
+            // TODO Try and ensure topological order in superclasses
+            .allSuperclasses
+            .mapNotNull(KClass<*>::companionObjectInstance)
+            .filterIsInstance(ValueProvider::class.java)
+            .forEach {
+                it.provideValues().forEach { (property, value) ->
+                    setProperty(property, value)
+                }
+            }
     }
 
     override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? =
