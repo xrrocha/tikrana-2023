@@ -11,6 +11,7 @@ include(
     "tikrana-commons",
     "tikrana-http-server",
     "tikrana-memory-image",
-    "tikrana-memory-acme",
+    "tikrana-dynamic-proxy",
+    "tikrana-acme",
 )
 
