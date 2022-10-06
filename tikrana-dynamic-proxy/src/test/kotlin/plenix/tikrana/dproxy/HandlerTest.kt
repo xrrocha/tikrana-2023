@@ -1,7 +1,6 @@
 package plenix.tikrana.dproxy
 
 import org.junit.jupiter.api.Test
-import plenix.tikrana.dproxy.DynamicProxy.Companion.new
 import plenix.tikrana.dproxy.Model.Gender.FEMALE
 import plenix.tikrana.dproxy.Model.Person
 import plenix.tikrana.dproxy.Model.PersonName
@@ -16,7 +15,7 @@ object Model {
     interface Entity {
         val id: Long
 
-        companion object : ValueProvider<Entity> {
+        companion object : PropertyValueProvider<Entity> {
             private val idGenerator = AtomicLong(41L)
             protected fun nextId() = idGenerator.incrementAndGet()
             override fun provideValues() = listOf(Entity::id to nextId())
@@ -34,7 +33,7 @@ object Model {
         var paternalSurname: String,
         var maternalSurname: String? = null
     ) {
-        fun show() = "$paternalSurname, $firstName"
+        override fun toString() = "$paternalSurname, $firstName"
     }
 
     interface Person : Entity, Nameable {
@@ -42,28 +41,22 @@ object Model {
         var personName: PersonName
         var birthDate: LocalDate
         override val name: String
-            get() = personName.show()
+            get() = personName.toString()
 
         fun age() = YEARS.between(birthDate, LocalDate.now()).toInt()
     }
-
-    interface User : Person { // TODO As Person role
-        var userName: String
-        var passwordHash: ByteArray
-        var primaryEmail: String
-    }
-
-    operator fun <T : Entity> T.invoke(block: T.() -> Unit) = block(this)
 }
 
-class DynamicProxyTest {
+class HandlerTest {
     @Test
-    fun `DProxy populates interface properties completely and correctly`() {
+    fun `Handler populates interface properties completely and correctly`() {
+
         val janet = new<Person> {
             gender = FEMALE
             personName = PersonName(firstName = "Janet", paternalSurname = "Doe")
             birthDate = LocalDate.of(1970, 1, 1)
         }
+
         assertEquals(42L, janet.id)
         assertEquals(FEMALE, janet.gender)
         assertEquals("Doe, Janet", janet.name)
