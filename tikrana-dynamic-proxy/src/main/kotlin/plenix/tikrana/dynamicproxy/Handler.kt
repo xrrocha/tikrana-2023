@@ -12,25 +12,28 @@ import java.util.WeakHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KVisibility.PUBLIC
 import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaSetter
 import kotlin.reflect.jvm.kotlinFunction
 
-inline fun <reified T : Any> new(noinline block: T.() -> Unit): T =
-    (new(T::class) as T).also(block)
+inline fun <reified T : Any> new(parent: Any? = null, noinline block: (T.() -> Unit)? = null): T =
+    (new(T::class, parent) as T).also { block?.invoke(it) }
 
-fun new(kClass: KClass<*>): Any = Proxy.newProxyInstance(kClass.java.classLoader, arrayOf(kClass.java), Handler(kClass))
+fun new(kClass: KClass<*>, parent: Any? = null): Any =
+    Proxy.newProxyInstance(kClass.java.classLoader, arrayOf(kClass.java), Handler(kClass, parent))
 
 interface PropertyValueProvider<T> {
     fun provideValues(): List<Pair<KProperty1<T, *>, Any?>>
 }
 
-class Handler(kClass: KClass<*>) : InvocationHandler {
+class Handler(kClass: KClass<*>, parent: Any? = null) : InvocationHandler {
 
     private val values = mutableMapOf<String, Any?>()
 
@@ -46,6 +49,16 @@ class Handler(kClass: KClass<*>) : InvocationHandler {
                     setProperty(property, value)
                 }
             }
+
+        @Suppress("UNCHECKED_CAST")
+        parent?.also { source ->
+            source::class.memberProperties
+                .map { it as KProperty1<Any, Any> }
+                .filter { it.visibility == PUBLIC }
+                .forEach {property ->
+                    setProperty(property, property.get(source))
+                }
+        }
     }
 
     override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? =

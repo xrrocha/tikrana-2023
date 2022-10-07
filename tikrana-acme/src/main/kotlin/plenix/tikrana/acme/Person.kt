@@ -33,13 +33,7 @@ interface Person : Entity, Nameable {
 inline fun <reified R : PersonRole> Person.role(): R =
     Person.roles
         .computeIfAbsent(this) { mutableMapOf() }
-        .computeIfAbsent(R::class) {
-            new<R> {
-                gender = this@role.gender
-                personName = this@role.personName
-                birthDate = this@role.birthDate
-            }
-        } as R
+        .computeIfAbsent(R::class) { new<R>(this@role) } as R
 
 interface PersonRole: Person {}
 
