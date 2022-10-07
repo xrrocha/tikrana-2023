@@ -50,6 +50,7 @@ class Handler(kClass: KClass<*>, parent: Any? = null) : InvocationHandler {
                 }
             }
 
+        // TODO Disallow overriding inherited properties!
         @Suppress("UNCHECKED_CAST")
         parent?.also { source ->
             source::class.memberProperties

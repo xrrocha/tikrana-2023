@@ -15,7 +15,7 @@ class CreateUserScenario {
             personName = PersonName(firstName = "Sandra", paternalSurname = "Ortiz")
             birthDate = LocalDate.of(1965, 8, 7)
         }
-        val usuarioSandra = sandra.role<User>().apply {
+        val usuarioSandra = sandra.setRole<User> {
             userName = "scom"
         }
         assertEquals("scom", usuarioSandra.userName)
