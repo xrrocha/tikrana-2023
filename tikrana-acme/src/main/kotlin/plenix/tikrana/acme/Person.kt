@@ -41,4 +41,5 @@ interface PersonRole : Person {}
 
 interface User : PersonRole {
     var userName: Name
+    var passwordHash: ByteArray
 }
