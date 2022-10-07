@@ -33,9 +33,9 @@ interface Person : Entity, Nameable {
 inline fun <reified R : PersonRole> Person.getRole(): R? =
     Person.roles.computeIfAbsent(this) { mutableMapOf() }[R::class] as R?
 
-inline fun <reified R : PersonRole> Person.setRole(noinline block: R.() -> Unit): R =
+inline fun <reified R : PersonRole> Person.addRole(noinline block: R.() -> Unit): R =
     Person.roles.computeIfAbsent(this) { mutableMapOf() }
-        .let { map -> new(this@setRole, block).also { map[R::class] = it } }
+        .let { map -> new(this@addRole, block).also { map[R::class] = it } }
 
 interface PersonRole : Person {}
 
