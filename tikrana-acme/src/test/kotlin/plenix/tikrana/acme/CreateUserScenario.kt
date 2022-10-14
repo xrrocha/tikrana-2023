@@ -17,7 +17,7 @@ class CreateUserScenario {
             birthDate = LocalDate.of(1965, 8, 7)
         }
         val usuarioSandra = sandra.addRole<User> {
-            userName = "scortiz"
+            userName = "scom"
             passwordHash = MessageDigest.getInstance("MD5").digest("Shangri-La".toByteArray())
         }
         assertEquals("scom", usuarioSandra.userName)
